@@ -155,7 +155,7 @@ class TestFragment : Fragment() {
         binding.radioGroupContainer.clearCheck()
         binding.textQues.text = mData[quesNo].question
         binding.quesLeft.text = "${quesNo + 1}"
-        showToast(mData[quesNo].correct_answer)
+//        showToast(mData[quesNo].correct_answer)
         when (Random.nextInt(0, 4)) {
             0 -> {
                 binding.optionA.text = mData[quesNo].correct_answer
@@ -186,7 +186,7 @@ class TestFragment : Fragment() {
         quesNo++
     }
 
-    private fun showToast(message: String, duration: Int = Toast.LENGTH_LONG) {
+    private fun showToast(message: String, duration: Int = Toast.LENGTH_SHORT) {
         Toast.makeText(context, message, duration).show()
     }
 
@@ -222,8 +222,7 @@ class TestFragment : Fragment() {
                 showToast("Data can't fetch !")
             }
         }, { error ->
-            showToast("Connect To The Internet!")
-            Navigation.findNavController(requireView()).navigate(R.id.action_testFragment_to_mainFragment)
+            showToast("No Response !")
         })
         queue.add(request)
         binding.skyBack.visibility = View.INVISIBLE

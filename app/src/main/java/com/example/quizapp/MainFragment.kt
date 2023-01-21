@@ -1,6 +1,10 @@
 package com.example.quizapp
 
 import android.animation.Animator
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -25,6 +29,7 @@ private const val ARG_PARAM2 = "param2"
  * Use the [MainFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
+@Suppress("UNREACHABLE_CODE")
 class MainFragment : Fragment(), AdapterView.OnItemSelectedListener {
     // TODO: Rename and change types of parameters
     private var param1: String? = null
@@ -77,7 +82,10 @@ class MainFragment : Fragment(), AdapterView.OnItemSelectedListener {
 
         binding = FragmentMainBinding.inflate(layoutInflater, container, false)
         // Inflate the layout for this fragment
-
+        //        check Internet
+        if (!checkForInternet(binding.root.context)) {
+            showToast("Connect To The Internet")
+        }
         return binding.root
     }
 
@@ -104,11 +112,15 @@ class MainFragment : Fragment(), AdapterView.OnItemSelectedListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.btnStart.setOnClickListener {
-            val bundle = Bundle()
-            bundle.putString("cat", finalCat)
-            bundle.putString("diff", finalDiff)
-            Navigation.findNavController(view)
-                .navigate(R.id.action_mainFragment_to_testFragment, bundle)
+            if(checkForInternet(binding.root.context)){
+                // Getting data
+                val bundle = Bundle()
+                bundle.putString("cat", finalCat)
+                bundle.putString("diff", finalDiff)
+                Navigation.findNavController(view)
+                    .navigate(R.id.action_mainFragment_to_testFragment, bundle)
+            }else
+                showToast("Connect To The Internet !")
         }
 
 
@@ -161,6 +173,7 @@ class MainFragment : Fragment(), AdapterView.OnItemSelectedListener {
         }
     }
 
+
     override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
         if (parent?.id == binding.spinnerCategory.id) {
             finalCat = (position + 8).toString()
@@ -178,7 +191,30 @@ class MainFragment : Fragment(), AdapterView.OnItemSelectedListener {
         showToast("Nothing is selected")
     }
 
-    private fun showToast(message: String, duration: Int = Toast.LENGTH_LONG) {
+    private fun checkForInternet(context: Context): Boolean {
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        // if the android version is equal to M
+        // or greater we need to use the
+        // NetworkCapabilities to check what type of
+        // network has the internet connection
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+
+            // Returns a Network object corresponding to
+            // the currently active default data network.
+            val network = connectivityManager.activeNetwork ?: return false
+            return true
+        } else {
+            // if the android version is below M
+            @Suppress("DEPRECATION") val networkInfo =
+                connectivityManager.activeNetworkInfo ?: return false
+            @Suppress("DEPRECATION")
+            return networkInfo.isConnected
+        }
+    }
+
+    private fun showToast(message: String, duration: Int = Toast.LENGTH_SHORT) {
         Toast.makeText(context, message, duration).show()
     }
 }
