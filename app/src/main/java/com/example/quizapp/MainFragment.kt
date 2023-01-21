@@ -57,7 +57,7 @@ class MainFragment : Fragment(), AdapterView.OnItemSelectedListener {
         "Geography",
         "History",
         "Politics",
-        "Arts",
+        "Art",
         "Celebrities",
         "Animals",
         "Vehicles",

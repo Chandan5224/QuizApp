@@ -3,7 +3,6 @@ package com.example.quizapp
 import android.animation.Animator
 import android.app.AlertDialog
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -15,9 +14,7 @@ import com.android.volley.Request
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import com.example.quizapp.databinding.FragmentTestBinding
-import kotlinx.coroutines.delay
 import org.json.JSONException
-import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.random.Random
 
@@ -43,7 +40,7 @@ class TestFragment : Fragment() {
     private var quesNo: Int = 0
     private var correctAns = 0
     private var correct = ""
-    lateinit var bundle:Bundle
+    lateinit var bundle: Bundle
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
@@ -51,6 +48,7 @@ class TestFragment : Fragment() {
             param2 = it.getString(ARG_PARAM2)
         }
     }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -63,6 +61,11 @@ class TestFragment : Fragment() {
         mData = ArrayList(10)
         fetchData()
         /// Make view invisible
+        binding.skyBack.visibility = View.INVISIBLE
+        binding.quesCardView.visibility = View.INVISIBLE
+        binding.radioLayout.visibility = View.INVISIBLE
+        binding.btnNext.visibility = View.INVISIBLE
+        binding.lottieAnim.visibility = View.VISIBLE
 
         return binding.root
     }
@@ -90,17 +93,35 @@ class TestFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.lottieAnim.addAnimatorListener(object : Animator.AnimatorListener {
+            override fun onAnimationStart(animation: Animator) {
+            }
+
+            override fun onAnimationEnd(animation: Animator) {
+                binding.skyBack.visibility = View.VISIBLE
+                binding.quesCardView.visibility = View.VISIBLE
+                binding.radioLayout.visibility = View.VISIBLE
+                binding.btnNext.visibility = View.VISIBLE
+                binding.lottieAnim.visibility = View.GONE
+                loadQues()
+            }
+
+            override fun onAnimationCancel(animation: Animator) {
+            }
+
+            override fun onAnimationRepeat(animation: Animator) {
+            }
+        })
+
 //        Next Button Handle
         binding.btnNext.setOnClickListener {
             if (correct == mData[quesNo - 1].correct_answer)
                 correctAns++
-            if (quesNo == 10)
-            {
-                bundle.putString("correctAns",correctAns.toString())
+            if (quesNo == 10) {
+                bundle.putString("correctAns", correctAns.toString())
                 Navigation.findNavController(view)
-                    .navigate(R.id.action_testFragment_to_resultFragment,bundle)
-            }
-            else
+                    .navigate(R.id.action_testFragment_to_resultFragment, bundle)
+            } else
                 loadQues()
         }
 
@@ -155,7 +176,7 @@ class TestFragment : Fragment() {
         binding.radioGroupContainer.clearCheck()
         binding.textQues.text = mData[quesNo].question
         binding.quesLeft.text = "${quesNo + 1}"
-//        showToast(mData[quesNo].correct_answer)
+        showToast(mData[quesNo].correct_answer)
         when (Random.nextInt(0, 4)) {
             0 -> {
                 binding.optionA.text = mData[quesNo].correct_answer
@@ -202,10 +223,10 @@ class TestFragment : Fragment() {
         val url = "https://opentdb.com/api.php?amount=10$finalCat$finalDiff&type=multiple"
 
         val request = JsonObjectRequest(Request.Method.GET, url, null, { response ->
-            try {
-                val newsJsonArray = response.getJSONArray("results")
-                for (i in 0 until newsJsonArray.length()) {
-                    val newsJsonObject = newsJsonArray.getJSONObject(i)
+            if (response.getInt("response_code") == 0) {
+                val newJsonArray = response.getJSONArray("results")
+                for (i in 0 until newJsonArray.length()) {
+                    val newsJsonObject = newJsonArray.getJSONObject(i)
                     val incur = newsJsonObject.getJSONArray("incorrect_answers")
                     val insurString = ArrayList<String>(3)
                     for (i in 0 until incur.length()) {
@@ -218,33 +239,14 @@ class TestFragment : Fragment() {
                     )
                     mData.add(data)
                 }
-            } catch (e: JSONException) {
+            } else {
                 showToast("Data can't fetch !")
+                Navigation.findNavController(requireView())
+                    .navigate(R.id.action_testFragment_to_mainFragment)
             }
         }, { error ->
             showToast("No Response !")
         })
         queue.add(request)
-        binding.skyBack.visibility = View.INVISIBLE
-        binding.quesCardView.visibility = View.INVISIBLE
-        binding.radioLayout.visibility = View.INVISIBLE
-        binding.btnNext.visibility = View.INVISIBLE
-        binding.lottieAnim.visibility = View.VISIBLE
-        binding.lottieAnim.addAnimatorListener(object : Animator.AnimatorListener {
-            override fun onAnimationStart(animation: Animator) {
-            }
-            override fun onAnimationEnd(animation: Animator) {
-                binding.skyBack.visibility = View.VISIBLE
-                binding.quesCardView.visibility = View.VISIBLE
-                binding.radioLayout.visibility = View.VISIBLE
-                binding.btnNext.visibility = View.VISIBLE
-                binding.lottieAnim.visibility = View.GONE
-                loadQues()
-            }
-            override fun onAnimationCancel(animation: Animator) {
-            }
-            override fun onAnimationRepeat(animation: Animator) {
-            }
-        })
     }
 }

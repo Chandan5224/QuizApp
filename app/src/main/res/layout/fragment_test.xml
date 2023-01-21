@@ -178,6 +178,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:lottie_autoPlay="true"
+        android:elevation="12dp"
         app:lottie_rawRes="@raw/egg_timer"
         app:lottie_speed="1" />
 
