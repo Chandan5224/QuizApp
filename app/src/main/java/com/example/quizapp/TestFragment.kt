@@ -93,25 +93,6 @@ class TestFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.lottieAnim.addAnimatorListener(object : Animator.AnimatorListener {
-            override fun onAnimationStart(animation: Animator) {
-            }
-
-            override fun onAnimationEnd(animation: Animator) {
-                binding.skyBack.visibility = View.VISIBLE
-                binding.quesCardView.visibility = View.VISIBLE
-                binding.radioLayout.visibility = View.VISIBLE
-                binding.btnNext.visibility = View.VISIBLE
-                binding.lottieAnim.visibility = View.GONE
-                loadQues()
-            }
-
-            override fun onAnimationCancel(animation: Animator) {
-            }
-
-            override fun onAnimationRepeat(animation: Animator) {
-            }
-        })
 
 //        Next Button Handle
         binding.btnNext.setOnClickListener {
@@ -248,5 +229,25 @@ class TestFragment : Fragment() {
             showToast("No Response !")
         })
         queue.add(request)
+
+        binding.lottieAnim.addAnimatorListener(object : Animator.AnimatorListener {
+            override fun onAnimationStart(animation: Animator) {
+            }
+
+            override fun onAnimationEnd(animation: Animator) {
+                binding.skyBack.visibility = View.VISIBLE
+                binding.quesCardView.visibility = View.VISIBLE
+                binding.radioLayout.visibility = View.VISIBLE
+                binding.btnNext.visibility = View.VISIBLE
+                binding.lottieAnim.visibility = View.GONE
+                loadQues()
+            }
+
+            override fun onAnimationCancel(animation: Animator) {
+            }
+
+            override fun onAnimationRepeat(animation: Animator) {
+            }
+        })
     }
 }
