@@ -115,12 +115,11 @@ class TestFragment : Fragment() {
                 builder.apply {
                     setTitle(R.string.dialogMessage)
                     setIcon(android.R.drawable.ic_dialog_alert)
-                    setPositiveButton("Yes") { dialogInterface, which ->
-                        Navigation.findNavController(view)
-                            .navigate(R.id.action_testFragment_to_mainFragment)
+                    setPositiveButton("Ok") { dialogInterface, which ->
+                        Navigation.findNavController(view).navigate(R.id.action_testFragment_to_mainFragment)
                     }
-                    setNeutralButton("No") { dialogInterface, which ->
-
+                    setNeutralButton("Cancel") { dialogInterface, which ->
+                        dialogInterface.cancel()
                     }
                 }
                 val alertDialog: AlertDialog = builder.create()

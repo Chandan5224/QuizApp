@@ -37,16 +37,18 @@
             app:layout_constraintEnd_toEndOf="parent"
             android:gravity="center_vertical">
             <androidx.cardview.widget.CardView
+                android:id="@id/cardView"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
                 android:layout_marginStart="10dp"
-                app:cardCornerRadius="30dp">
+                app:cardCornerRadius="30dp"
+                tools:ignore="UsingOnClickInXml">
                 <ImageView
                     android:id="@+id/userImage"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:scaleType="centerCrop"
                     android:src="@drawable/luffy"
+                    android:scaleType="centerCrop"
                     />
             </androidx.cardview.widget.CardView>
 

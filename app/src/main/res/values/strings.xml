@@ -5,4 +5,5 @@
     <string name="dialogMessage">Are you sure ?</string>
     <string name="welcome_to_quiz_app">Welcome to Quiz App</string>
     <string name="made_by_nchandan">Made By\nChandan</string>
+    <string name="preference_file_name">Users</string>
 </resources>

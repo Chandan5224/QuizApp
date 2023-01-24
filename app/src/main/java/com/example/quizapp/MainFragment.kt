@@ -1,22 +1,34 @@
 package com.example.quizapp
 
 import android.animation.Animator
+import android.app.Dialog
 import android.content.Context
+import android.content.SharedPreferences
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.view.Gravity
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.os.Environment
+import android.view.*
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.ImageButton
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.ActivityResultCallback
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import com.example.quizapp.databinding.FragmentMainBinding
+import com.google.android.material.button.MaterialButton
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.IOException
 
 
 // TODO: Rename parameter arguments, choose names that match
@@ -35,6 +47,7 @@ class MainFragment : Fragment(), AdapterView.OnItemSelectedListener {
     private var param1: String? = null
     private var param2: String? = null
 
+    lateinit var sharedPreferences: SharedPreferences
     lateinit var binding: FragmentMainBinding
     var finalCat: String = ""
     var finalDiff: String = ""
@@ -79,10 +92,22 @@ class MainFragment : Fragment(), AdapterView.OnItemSelectedListener {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-
         binding = FragmentMainBinding.inflate(layoutInflater, container, false)
-        // Inflate the layout for this fragment
-        //        check Internet
+
+        sharedPreferences = requireActivity().getSharedPreferences(
+            getString(R.string.preference_file_name),
+            Context.MODE_PRIVATE
+        )
+        val logIn = sharedPreferences.getBoolean("logIn", false)
+
+        if (!logIn) {
+            onCreateDialog()
+        } else {
+            setData()
+        }
+
+//         Inflate the layout for this fragment
+//                check Internet
         if (!checkForInternet(binding.root.context)) {
             showToast("Connect To The Internet")
         }
@@ -111,15 +136,16 @@ class MainFragment : Fragment(), AdapterView.OnItemSelectedListener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         binding.btnStart.setOnClickListener {
-            if(checkForInternet(binding.root.context)){
+            if (checkForInternet(binding.root.context)) {
                 // Getting data
                 val bundle = Bundle()
                 bundle.putString("cat", finalCat)
                 bundle.putString("diff", finalDiff)
                 Navigation.findNavController(view)
                     .navigate(R.id.action_mainFragment_to_testFragment, bundle)
-            }else
+            } else
                 showToast("Connect To The Internet !")
         }
 
@@ -194,13 +220,11 @@ class MainFragment : Fragment(), AdapterView.OnItemSelectedListener {
     private fun checkForInternet(context: Context): Boolean {
         val connectivityManager =
             context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
         // if the android version is equal to M
         // or greater we need to use the
         // NetworkCapabilities to check what type of
         // network has the internet connection
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-
             // Returns a Network object corresponding to
             // the currently active default data network.
             val network = connectivityManager.activeNetwork ?: return false
@@ -214,9 +238,120 @@ class MainFragment : Fragment(), AdapterView.OnItemSelectedListener {
         }
     }
 
+    private fun onCreateDialog() {
+        val dialog = Dialog(binding.root.context, com.airbnb.lottie.R.style.Theme_AppCompat_Dialog)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.popup_dialog);
+        dialog.setCanceledOnTouchOutside(false);
+
+        val userN = dialog.findViewById<TextView>(R.id.popupUserName)
+        val image = dialog.findViewById<ImageButton>(R.id.imageUpload)
+        var uri: Uri = Uri.parse("")
+        val getImage = registerForActivityResult(
+            ActivityResultContracts.GetContent(), ActivityResultCallback {
+                uri = it!!
+                image.setImageURI(it)
+            }
+        )
+        image.setOnClickListener {
+            getImage.launch("image/*")
+        }
+        dialog.findViewById<MaterialButton>(R.id.saveBtn).setOnClickListener {
+            if (userN.text.isNotEmpty()) {
+                var name = userN.text.toString()[0].toString().uppercase()
+                for (i in 1 until userN.text.length) {
+                    if (userN.text.toString()[i] != ' ')
+                        name += userN.text.toString()[i].toString()
+                    else
+                        break
+                }
+                writeTextData("$name $uri")
+                binding.userName.text = "Hello, $name"
+//                binding.userImage.setImageURI(uri)
+            }
+            sharedPreferences.edit().putBoolean("logIn", true).apply()
+            dialog.cancel()
+        }
+        dialog.window!!.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window!!.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        dialog.show();
+    }
+
+
+
+    private fun writeTextData(data: String) {
+        // Creating folder with name GeeksForGeeks
+        val folder: File? = requireActivity().getExternalFilesDir("QuizApp")
+
+        // Creating file with name gfg.txt
+        val file = File(folder, "userData.txt")
+        var fileOutputStream: FileOutputStream? = null
+        try {
+            fileOutputStream = FileOutputStream(file)
+            fileOutputStream.write(data.toByteArray())
+//            Toast.makeText(context, "Done" + file.absolutePath, Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            if (fileOutputStream != null) {
+                try {
+                    fileOutputStream.close()
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
+
+    fun setData() {
+
+//         GeeksForGeeks represent the folder name to access privately saved data
+        val folder: File? = requireActivity().getExternalFilesDir("QuizApp")
+
+        // gft.txt is the file that is saved privately
+        val file = File(folder, "userData.txt")
+        val data = getData(file)
+        for (i in 0 until data!!.length) {
+            if (data[i] == ' ') {
+//                binding.userImage.setImageURI(Uri.parse(data.subSequence(i+1, data.length).toString()))
+                binding.userName.text= "Hello, ${data.subSequence(0,i)}"
+            }
+        }
+    }
+
+    // getData() is the method which reads the data
+    // the data that is saved in byte format in the file
+    private fun getData(myFile: File): String? {
+        var fileInputStream: FileInputStream? = null
+        try {
+            fileInputStream = FileInputStream(myFile)
+            var i = -1
+            val buffer = StringBuffer()
+            while (fileInputStream.read().also { i = it } != -1) {
+                buffer.append(i.toChar())
+            }
+            return buffer.toString()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            if (fileInputStream != null) {
+                try {
+                    fileInputStream.close()
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                }
+            }
+        }
+        return null
+    }
+
+
     private fun showToast(message: String, duration: Int = Toast.LENGTH_SHORT) {
         Toast.makeText(context, message, duration).show()
     }
 }
-
 
