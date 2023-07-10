@@ -4,8 +4,11 @@ import android.animation.Animator
 import android.app.Dialog
 import android.content.Context
 import android.content.SharedPreferences
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
 import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.Build
@@ -21,14 +24,12 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
+import androidx.core.graphics.drawable.toBitmap
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import com.example.quizapp.databinding.FragmentMainBinding
 import com.google.android.material.button.MaterialButton
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.IOException
+import java.io.*
 
 
 // TODO: Rename parameter arguments, choose names that match
@@ -94,6 +95,8 @@ class MainFragment : Fragment(), AdapterView.OnItemSelectedListener {
     ): View? {
         binding = FragmentMainBinding.inflate(layoutInflater, container, false)
 
+        binding.lottieAnim.playAnimation()
+
         sharedPreferences = requireActivity().getSharedPreferences(
             getString(R.string.preference_file_name),
             Context.MODE_PRIVATE
@@ -114,25 +117,6 @@ class MainFragment : Fragment(), AdapterView.OnItemSelectedListener {
         return binding.root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment MainFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            MainFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -257,20 +241,19 @@ class MainFragment : Fragment(), AdapterView.OnItemSelectedListener {
             getImage.launch("image/*")
         }
         dialog.findViewById<MaterialButton>(R.id.saveBtn).setOnClickListener {
-            if (userN.text.isNotEmpty()) {
+            if (userN.text.isNotEmpty() && uri.toString().isNotEmpty()) {
                 var name = userN.text.toString()[0].toString().uppercase()
-                for (i in 1 until userN.text.length) {
-                    if (userN.text.toString()[i] != ' ')
-                        name += userN.text.toString()[i].toString()
-                    else
-                        break
-                }
-                writeTextData("$name $uri")
+                name += userN.text.toString().substring(1).lowercase()
+                val bitmap = uriToBitmap(binding.root.context, uri)
+                writeTextData("$name", bitmap)
                 binding.userName.text = "Hello, $name"
-//                binding.userImage.setImageURI(uri)
+                binding.userImage.setImageURI(uri)
+                sharedPreferences.edit().putBoolean("logIn", true).apply()
+                dialog.cancel()
+            }else{
+                Toast.makeText(binding.root.context,"Please enter details",Toast.LENGTH_SHORT).show()
             }
-            sharedPreferences.edit().putBoolean("logIn", true).apply()
-            dialog.cancel()
+
         }
         dialog.window!!.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
@@ -281,16 +264,25 @@ class MainFragment : Fragment(), AdapterView.OnItemSelectedListener {
         dialog.show();
     }
 
+    private fun uriToBitmap(context: Context, uri: Uri): Bitmap {
+        val inputStream = context.contentResolver.openInputStream(uri)
+        return BitmapFactory.decodeStream(inputStream)
+    }
 
-
-    private fun writeTextData(data: String) {
+    private fun writeTextData(data: String, imageBitmap: Bitmap) {
         // Creating folder with name GeeksForGeeks
         val folder: File? = requireActivity().getExternalFilesDir("QuizApp")
 
         // Creating file with name gfg.txt
         val file = File(folder, "userData.txt")
+        val file2 = File(folder, "my_image.jpg")
         var fileOutputStream: FileOutputStream? = null
+        var outputStream: FileOutputStream? = null
         try {
+            // Create an output stream to write the bitmap data to the file
+            outputStream = FileOutputStream(file2)
+            // Compress the bitmap to JPEG format and write it to the output stream
+            imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
             fileOutputStream = FileOutputStream(file)
             fileOutputStream.write(data.toByteArray())
 //            Toast.makeText(context, "Done" + file.absolutePath, Toast.LENGTH_SHORT).show()
@@ -304,23 +296,26 @@ class MainFragment : Fragment(), AdapterView.OnItemSelectedListener {
                     e.printStackTrace()
                 }
             }
+            if (outputStream != null) {
+                try {
+                    outputStream.close()
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                }
+            }
         }
     }
 
     fun setData() {
-
 //         GeeksForGeeks represent the folder name to access privately saved data
         val folder: File? = requireActivity().getExternalFilesDir("QuizApp")
-
         // gft.txt is the file that is saved privately
         val file = File(folder, "userData.txt")
+        val file2 = File(folder, "my_image.jpg")
         val data = getData(file)
-        for (i in 0 until data!!.length) {
-            if (data[i] == ' ') {
-//                binding.userImage.setImageURI(Uri.parse(data.subSequence(i+1, data.length).toString()))
-                binding.userName.text= "Hello, ${data.subSequence(0,i)}"
-            }
-        }
+        binding.userImage.setImageBitmap(BitmapFactory.decodeFile(file2.absolutePath))
+        binding.userName.text = "Hello, $data"
+
     }
 
     // getData() is the method which reads the data

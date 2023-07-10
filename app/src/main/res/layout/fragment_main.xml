@@ -62,7 +62,7 @@
                     android:id="@+id/userName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Hello, Chandan"
+                    android:text="Hello"
                     android:textColor="@color/white"
                     android:textSize="20sp"
                     android:textStyle="bold"/>
@@ -86,7 +86,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:lottie_autoPlay="true"
             app:lottie_rawRes="@raw/quiz_bump" />
         <com.airbnb.lottie.LottieAnimationView
             android:id="@+id/lottieAnim2"

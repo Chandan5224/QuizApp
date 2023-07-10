@@ -3,6 +3,7 @@ package com.example.quizapp
 import android.animation.Animator
 import android.app.AlertDialog
 import android.os.Bundle
+import android.text.Html
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -70,25 +71,6 @@ class TestFragment : Fragment() {
         return binding.root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment TestFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            TestFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -116,7 +98,8 @@ class TestFragment : Fragment() {
                     setTitle(R.string.dialogMessage)
                     setIcon(android.R.drawable.ic_dialog_alert)
                     setPositiveButton("Ok") { dialogInterface, which ->
-                        Navigation.findNavController(view).navigate(R.id.action_testFragment_to_mainFragment)
+                        Navigation.findNavController(view)
+                            .navigate(R.id.action_testFragment_to_mainFragment)
                     }
                     setNeutralButton("Cancel") { dialogInterface, which ->
                         dialogInterface.cancel()
@@ -157,6 +140,7 @@ class TestFragment : Fragment() {
         binding.textQues.text = mData[quesNo].question
         binding.quesLeft.text = "${quesNo + 1}"
         showToast(mData[quesNo].correct_answer)
+
         when (Random.nextInt(0, 4)) {
             0 -> {
                 binding.optionA.text = mData[quesNo].correct_answer
@@ -234,12 +218,19 @@ class TestFragment : Fragment() {
             }
 
             override fun onAnimationEnd(animation: Animator) {
-                binding.skyBack.visibility = View.VISIBLE
-                binding.quesCardView.visibility = View.VISIBLE
-                binding.radioLayout.visibility = View.VISIBLE
-                binding.btnNext.visibility = View.VISIBLE
-                binding.lottieAnim.visibility = View.GONE
-                loadQues()
+
+                if (mData.isNotEmpty()) {
+                    binding.skyBack.visibility = View.VISIBLE
+                    binding.quesCardView.visibility = View.VISIBLE
+                    binding.radioLayout.visibility = View.VISIBLE
+                    binding.btnNext.visibility = View.VISIBLE
+                    binding.lottieAnim.visibility = View.GONE
+                    loadQues()
+                } else {
+                    showToast("Data can't fetch !")
+                    Navigation.findNavController(requireView())
+                        .navigate(R.id.action_testFragment_to_mainFragment)
+                }
             }
 
             override fun onAnimationCancel(animation: Animator) {
