@@ -7,24 +7,20 @@ import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.graphics.Matrix
 import android.graphics.drawable.ColorDrawable
-import android.graphics.drawable.Drawable
+import android.media.ExifInterface
 import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
+import android.provider.MediaStore
 import android.view.*
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import android.widget.ImageButton
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.app.ActivityCompat
-import androidx.core.graphics.drawable.toBitmap
+import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import com.example.quizapp.databinding.FragmentMainBinding
@@ -250,8 +246,9 @@ class MainFragment : Fragment(), AdapterView.OnItemSelectedListener {
                 binding.userImage.setImageURI(uri)
                 sharedPreferences.edit().putBoolean("logIn", true).apply()
                 dialog.cancel()
-            }else{
-                Toast.makeText(binding.root.context,"Please enter details",Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(binding.root.context, "Please enter details", Toast.LENGTH_SHORT)
+                    .show()
             }
 
         }
@@ -313,10 +310,46 @@ class MainFragment : Fragment(), AdapterView.OnItemSelectedListener {
         val file = File(folder, "userData.txt")
         val file2 = File(folder, "my_image.jpg")
         val data = getData(file)
-        binding.userImage.setImageBitmap(BitmapFactory.decodeFile(file2.absolutePath))
+        val myBitmap = BitmapFactory.decodeFile(file2.absolutePath)
         binding.userName.text = "Hello, $data"
+//        binding.userImage.setImageBitmap(BitmapFactory.decodeFile(file2.absolutePath))
+        loadImageFromFile(file2.absolutePath,binding.userImage)
 
     }
+
+    private fun loadImageFromFile(imagePath: String, imageView: ImageView) {
+        try {
+            // Load the bitmap from the file
+            val bitmap = BitmapFactory.decodeFile(imagePath)
+
+            // Read the image's orientation information
+            val exif = ExifInterface(imagePath)
+            val orientation = exif.getAttributeInt(
+                ExifInterface.TAG_ORIENTATION,
+                ExifInterface.ORIENTATION_UNDEFINED
+            )
+
+            // Rotate the bitmap based on the orientation information
+            val rotatedBitmap = rotateBitmap(bitmap, orientation)
+
+            // Set the rotated bitmap in the ImageView
+            imageView.setImageBitmap(rotatedBitmap)
+        } catch (e: IOException) {
+            e.printStackTrace()
+            // Handle any errors that occur during loading or rotation
+        }
+    }
+
+    private fun rotateBitmap(bitmap: Bitmap, orientation: Int): Bitmap {
+        val matrix = Matrix()
+        when (orientation) {
+            ExifInterface.ORIENTATION_ROTATE_90 -> matrix.setRotate(90f)
+            ExifInterface.ORIENTATION_ROTATE_180 -> matrix.setRotate(180f)
+            ExifInterface.ORIENTATION_ROTATE_270 -> matrix.setRotate(270f)
+        }
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+    }
+
 
     // getData() is the method which reads the data
     // the data that is saved in byte format in the file

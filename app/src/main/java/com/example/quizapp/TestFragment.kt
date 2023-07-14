@@ -227,7 +227,7 @@ class TestFragment : Fragment() {
                     binding.lottieAnim.visibility = View.GONE
                     loadQues()
                 } else {
-                    showToast("Data can't fetch !")
+                    showToast("Data can't fetch by mData!")
                     Navigation.findNavController(requireView())
                         .navigate(R.id.action_testFragment_to_mainFragment)
                 }
