@@ -22,6 +22,6 @@ Key Features:
 
 So, why wait? Download QuizApp now and embark on an exhilarating journey of knowledge, challenge, and fun! Sharpen your mind, discover hidden talents, and impress your friends with your quiz-solving skills. Get ready to be the quiz champion you always knew you could be!
 # Screenshot
-![quiz app ss](https://github.com/Chandan5224/QuizApp/assets/86766647/91d07d67-1c56-4c9e-abf4-8a871cdf5d69)
+![quiz app ss](https://github.com/Chandan5224/QuizApp/assets/86766647/e16512aa-4fab-42ee-8cec-4e6efb74d827)
 
 
